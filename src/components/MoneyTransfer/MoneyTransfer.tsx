@@ -1,11 +1,12 @@
 import {Button, Input, Row, Select} from "antd";
 import styles from '../../assets/css/components/money-transfer.module.css';
 import {useState} from "react";
+import {DateTime} from "luxon";
 
 
 interface Transfer {
 	recipient: string;
-	date: Date;
+	date: DateTime;
 	sum: string;
 }
 
@@ -25,7 +26,7 @@ const MoneyTransfer = ({recipients, addTransfer}: MoneyTransferProps) => {
 	const [form, setForm] = useState({
 		recipient: "",
 		sum: "",
-		date: new Date(),
+		date: DateTime.now(),
 	})
 
 	return (
@@ -61,7 +62,7 @@ const MoneyTransfer = ({recipients, addTransfer}: MoneyTransferProps) => {
 				</Row>
 				<Row justify="space-around">
 					<Button
-						onClick={() => addTransfer({date: new Date(), sum: form.sum, recipient: form.recipient})}
+						onClick={() => addTransfer({date: DateTime.now(), sum: form.sum, recipient: form.recipient})}
 						style={{backgroundColor: '#061178', color: '#ffffff', border: 'none'}}
 					>
 						Перевести
