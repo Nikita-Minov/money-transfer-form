@@ -3,12 +3,14 @@ import styles from '../../assets/css/components/money-transfer.module.css';
 import {DateTime} from "luxon";
 import {Controller, SubmitHandler, useForm} from "react-hook-form";
 const { Text } = Typography;
+import * as yup from "yup";
+import {yupResolver} from "@hookform/resolvers/yup";
 
 
 interface Transfer {
 	recipient: string;
-	date: DateTime;
-	sum: string;
+	date: string;
+	sum: number;
 }
 
 
@@ -19,7 +21,7 @@ interface MoneyTransferProps {
 		value: string;
 		label: string;
 	};
-	sum: string;
+	sum: number;
 }
 
 interface Recipient {
@@ -34,89 +36,74 @@ interface IFormInput {
 
 const MoneyTransfer = ({recipients, addTransfer, recipient, sum}: MoneyTransferProps) => {
 
+	const validationSchema = yup.object().shape({
+		recipient: yup.string().required("Поле обязательно для заполнения"),
+		sum: yup.string().matches(/^-?(0|[1-9]\d*)$/, 'Некорректное значение').required("Поле обязательно для заполнения")
+	}).required();
+
 	const {
-		register,
 		handleSubmit,
 		control,
 		formState: { errors },
-	} = useForm<IFormInput>({
+	} = useForm({
+		resolver: yupResolver(validationSchema),
 		defaultValues: {
-			recipient: recipient.label || '',
-			sum: sum || '',
+			recipient: recipient.value,
+			sum: sum.toString(),
 		},
 		mode: 'onChange'
 	});
 	const onSubmit: SubmitHandler<IFormInput> = (data) => {
-		addTransfer({date: DateTime.now(), sum: data.sum, recipient: data.recipient})
-		console.log(data);
+		addTransfer({date: DateTime.now().toFormat('dd.LL.yyyy'), sum: +data.sum, recipient: data.recipient})
 	}
 
 	return (
-		<>
-			<form onSubmit={handleSubmit(onSubmit)} className={styles.moneyTransfer}>
-				<Row>
-					<label
-						htmlFor="recipient"
-						className={styles.moneyTransfer__label}>
-						Получатель:
-					</label>
-					<Controller
-						name="recipient"
-						control={control}
-						render={({ field }) => <Select
-							id="recipient"
-							{...register('recipient', {
-								required: {
-									value: true,
-									message: 'Поле обязательно для заполнения'
-								},
-							})}
-							style={{width: '100%', marginBottom: errors.recipient ? '5px' : '15px'}}
-							placeholder="Выберите из списка или введите номер"
-							{...field}
-							options={recipients || []}
-						/>
-					}
+		<form onSubmit={handleSubmit(onSubmit)} className={styles.moneyTransfer}>
+			<Row>
+				<label
+					htmlFor="recipient"
+					className={styles.moneyTransfer__label}>
+					Получатель:
+				</label>
+				<Controller
+					name="recipient"
+					control={control}
+					render={({ field }) => <Select
+						id="recipient"
+						style={{width: '100%', marginBottom: errors.recipient ? '5px' : '15px'}}
+						placeholder="Выберите из списка или введите номер"
+						{...field}
+						options={recipients || []}
 					/>
-					{errors.recipient && <Text style={{marginBottom: '15px', width: '100%'}} type="danger">{errors.recipient.message}</Text>}
-					<label
-						htmlFor="sum"
-						className={styles.moneyTransfer__label}>
-						Сумма:
-					</label>
-					<Controller
-						name="sum"
-						control={control}
-						render={({ field }) => <Input
-							id="sum"
-							{...register('sum', {
-								required: {
-									value: true,
-									message: 'Поле обязательно для заполнения'
-								},
-								pattern: {
-									value: /^-?(0|[1-9]\d*)$/,
-									message: 'Некорректное значение'
-								},
-							})}
-							style={{width: '100%', marginBottom: errors.sum ? '5px' : '15px'}}
-							{...field}
-						/>}
-					/>
-					{errors.sum && <Text style={{marginBottom: '15px', width: '100%'}} type="danger">{errors.sum.message}</Text>}
-				</Row>
-				<Row justify="space-around">
-						<Button
-							htmlType='submit'
-							style={{backgroundColor: '#061178', color: '#ffffff', border: 'none'}}
-						>
-							Перевести
-						</Button>
-
-					<Button>Отмена</Button>
-				</Row>
-			</form>
-		</>
+				}
+				/>
+				{errors.recipient && <Text className={styles.moneyTransfer__errorLabell} type="danger">{errors.recipient.message}</Text>}
+				<label
+					htmlFor="sum"
+					className={styles.moneyTransfer__label}>
+					Сумма:
+				</label>
+				<Controller
+					name="sum"
+					control={control}
+					render={({ field }) => <Input
+						id="sum"
+						style={{width: '100%', marginBottom: errors.sum ? '5px' : '15px'}}
+						{...field}
+					/>}
+				/>
+				{errors.sum && <Text className={styles.moneyTransfer__errorLabell} type="danger">{errors.sum.message}</Text>}
+			</Row>
+			<Row justify="space-around">
+					<Button
+						htmlType='submit'
+						className={styles.moneyTransfer__btn}
+					>
+						Перевести
+					</Button>
+				<Button>Отмена</Button>
+			</Row>
+		</form>
 	)
 }
 
